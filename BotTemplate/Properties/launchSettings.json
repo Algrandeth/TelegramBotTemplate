@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "FeedbackBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "BOT_TOKEN": "6065717413:AAFEBejcQyIcFx5TY4M751uc-QcTr83_Dyc",
+        "ADMIN_LIST": "638232468",
+        "POSTGRE_STRING": "Host=94.228.117.172:5432;Database=bot_template;Username=grand;Password=vlD6GCDM8dbsE9UXq0zz",
+        "FORUM_CHAT_ID": "-1001903852947"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "environmentVariables": {
+        "BOT_TOKEN": "6110932314:AAHudjPBB82zzLfNMbAj54JSbhTcJZDVoaI",
+        "ADMIN_LIST": "638232468,723065673",
+        "POSTGRE_STRING": "Host=94.228.117.172:5432;Database=smotrihen_online_bot;Username=grand;Password=vlD6GCDM8dbsE9UXq0zz"
+      },
+      "DockerfileRunArguments": "--restart always"
+    }
+  }
+}
