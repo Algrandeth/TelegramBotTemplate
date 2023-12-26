@@ -120,13 +120,13 @@ namespace TelegramBotFramework
                 if (update.Type is UpdateType.CallbackQuery)
                     updateInfo.CallbackQuery = update.CallbackQuery;
 
-                lock (taskInfo)
-                    if (taskInfo.Task != null)
-                    {
-                        taskInfo.Updates.Enqueue(updateInfo);
-                        taskInfo.Semaphore.Release();
-                        return;
-                    }
+                //lock (taskInfo)
+                //    if (taskInfo.Task != null)
+                //    {
+                //        taskInfo.Updates.Enqueue(updateInfo);
+                //        taskInfo.Semaphore.Release();
+                //        return;
+                //    }
                 await RunTask(taskInfo, updateInfo, chat!);
             }
             catch (Exception ex)
