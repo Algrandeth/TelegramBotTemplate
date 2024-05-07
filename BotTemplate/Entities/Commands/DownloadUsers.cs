@@ -1,11 +1,10 @@
-﻿using Template.Additional;
-using System.Data;
+﻿using System.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotFramework;
+using Template.Additional;
 
 namespace Template.Entities
 {
@@ -29,7 +28,7 @@ namespace Template.Entities
             {
                     new InlineKeyboardButton[] { "Назад" }
 
-                });
+            });
 
             using (var stream = Tools.GenerateStreamFromString(userIDs))
             {

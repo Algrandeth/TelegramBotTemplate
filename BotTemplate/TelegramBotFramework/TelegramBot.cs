@@ -1,11 +1,11 @@
-﻿using Template.Additional;
-using Template.Config;
-using Template.Data;
-using Template.Monitoring;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Template.Additional;
+using Template.Config;
+using Template.Data;
+using Template.Monitoring;
 
 namespace TelegramBotFramework
 {
@@ -37,7 +37,7 @@ namespace TelegramBotFramework
 
             await Task.Run(() =>
             {
-                BotClient.StartReceiving(UpdateHandler, ErrorHandler, cancellationToken: cts.Token);
+                BotClient.StartReceiving(UpdateHandler, ErrorHandler, cancellationToken: cts.Token, receiverOptions: new Telegram.Bot.Polling.ReceiverOptions() { ThrowPendingUpdates = true });
             });
 
             await BotClient.SetMyCommandsAsync(
@@ -112,28 +112,72 @@ namespace TelegramBotFramework
                 TaskInfo taskInfo;
                 chat ??= message?.Chat;
                 long chatId = chat?.Id ?? 0;
+
+                TaskInfo? existingTask;
                 lock (_tasks)
-                    if (!_tasks.TryGetValue(chatId, out taskInfo!))
-                        _tasks[chatId] = taskInfo = new TaskInfo();
+                    _tasks.TryGetValue(chatId, out existingTask);
+
+                taskInfo = existingTask ?? new TaskInfo();
+                if (existingTask == null)
+                {
+                    lock (_tasks)
+                        _tasks[chatId] = taskInfo;
+                }
 
                 var updateInfo = new UpdateInfo(taskInfo) { UpdateKind = updateKind, Update = update, Message = message };
                 if (update.Type is UpdateType.CallbackQuery)
                     updateInfo.CallbackQuery = update.CallbackQuery;
 
-                //lock (taskInfo)
-                //    if (taskInfo.Task != null)
-                //    {
-                //        taskInfo.Updates.Enqueue(updateInfo);
-                //        taskInfo.Semaphore.Release();
-                //        return;
-                //    }
+                if (taskInfo.Task != null)
+                {
+                    lock (taskInfo)
+                    {
+                        taskInfo.Updates.Enqueue(updateInfo);
+                        taskInfo.Semaphore.Release();
+                    }
+                    return;
+                }
+
                 await RunTask(taskInfo, updateInfo, chat!);
             }
             catch (Exception ex)
             {
-                await Logger.LogCritical(ex.Message);
+                await Logger.LogCritical($"Ошибка в обработке апдейта: {ex}");
             }
         }
+
+
+
+        // OG
+        //private async Task HandleUpdate(Update update, UpdateKind updateKind, Message? message = null, Chat? chat = null)
+        //{
+        //    try
+        //    {
+        //        TaskInfo taskInfo;
+        //        chat ??= message?.Chat;
+        //        long chatId = chat?.Id ?? 0;
+        //        lock (_tasks)
+        //            if (!_tasks.TryGetValue(chatId, out taskInfo!))
+        //                _tasks[chatId] = taskInfo = new TaskInfo();
+
+        //        var updateInfo = new UpdateInfo(taskInfo) { UpdateKind = updateKind, Update = update, Message = message };
+        //        if (update.Type is UpdateType.CallbackQuery)
+        //            updateInfo.CallbackQuery = update.CallbackQuery;
+
+        //        lock (taskInfo)
+        //            if (taskInfo.Task != null)
+        //            {
+        //                taskInfo.Updates.Enqueue(updateInfo);
+        //                taskInfo.Semaphore.Release();
+        //                return;
+        //            }
+        //        await RunTask(taskInfo, updateInfo, chat!);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await Logger.LogCritical(ex.Message);
+        //    }
+        //}
 
 
         private async Task RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat)
@@ -146,16 +190,51 @@ namespace TelegramBotFramework
 
             taskInfo.Task = Task.Run(taskStarter).ContinueWith(async t =>
             {
-                lock (taskInfo)
-                    if (taskInfo.Semaphore.CurrentCount == 0)
-                    {
-                        taskInfo.Task = null!;
-                        return;
-                    }
-                var newUpdate = await ((IGetNext)updateInfo).NextUpdate(cts.Token);
-                await RunTask(taskInfo, newUpdate, chat);
+                if (taskInfo.Semaphore.CurrentCount == 0)
+                {
+                    taskInfo.Task = null!;
+                    return;
+                }
+
+                await taskInfo.Semaphore.WaitAsync();
+                try
+                {
+                    var newUpdate = await ((IGetNext)updateInfo).NextUpdate(cts.Token);
+                    await RunTask(taskInfo, newUpdate, chat);
+                }
+                catch (Exception ex)
+                {
+                    await Logger.LogCritical(ex);
+                }
+                finally
+                {
+                    taskInfo.Semaphore.Release();
+                }
             });
         }
+
+
+        // OG
+        //private async Task RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat)
+        //{
+        //    Func<Task> taskStarter;
+
+        //    if (chat?.Type == ChatType.Private) taskStarter = () => OnPrivateChat(chat, updateInfo.Message?.From!, updateInfo);
+        //    else if (chat?.Type == ChatType.Channel) taskStarter = () => OnChannel(chat, updateInfo.Message?.From!, updateInfo);
+        //    else return;
+
+        //    taskInfo.Task = Task.Run(taskStarter).ContinueWith(async t =>
+        //    {
+        //        lock (taskInfo)
+        //            if (taskInfo.Semaphore.CurrentCount == 0)
+        //            {
+        //                taskInfo.Task = null!;
+        //                return;
+        //            }
+        //        var newUpdate = await ((IGetNext)updateInfo).NextUpdate(cts.Token);
+        //        await RunTask(taskInfo, newUpdate, chat);
+        //    });
+        //}
 
 
         /// <summary> Detects chat update kind </summary>
@@ -189,7 +268,7 @@ namespace TelegramBotFramework
 
                     case UpdateKind.CallbackQuery:
                         if (msg != null && update.Message.MessageId != msg.MessageId)
-                            _ = BotClient.AnswerCallbackQueryAsync(update.Update.CallbackQuery!.Id, null, cancellationToken: ct);
+                            _ = BotClient.AnswerCallbackQueryAsync(update.Update.CallbackQuery.Id, null, cancellationToken: ct);
                         else
                             return update.Update.CallbackQuery;
                         continue;
@@ -198,8 +277,8 @@ namespace TelegramBotFramework
                         when update.Update.MyChatMember is ChatMemberUpdated
                         { NewChatMember: { Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked } }:
                         {
-                            throw new LeftTheChatException();
-                        }
+                            return null;
+                        }// abort the calling method
                 }
             }
         }
@@ -223,12 +302,13 @@ namespace TelegramBotFramework
 
                     case UpdateKind.OtherUpdate
                         when update.Update.MyChatMember is ChatMemberUpdated
-                        { 
-                            NewChatMember: 
-                            { Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked } }:
-                                {
-                                    throw new LeftTheChatException();
-                                }
+                        {
+                            NewChatMember:
+                            { Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked }
+                        }:
+                        {
+                            throw new LeftTheChatException();
+                        }
                 }
             }
         }

@@ -1,9 +1,10 @@
-﻿using Template.Monitoring;
-using System.Data;
+﻿using System.Data;
+using System.Runtime.CompilerServices;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramBotFramework;
+using Template.Monitoring;
 
 namespace Template.Additional
 {
@@ -14,7 +15,7 @@ namespace Template.Additional
 
 
         public static async Task DeleteDeadUsers(ITelegramBotClient botClient, UpdateInfo update)
-        {
+        {   
             var users = pg.ExecuteSqlQueryAsEnumerable("select user_id, username from users").Select(a => new User
             {
                 Id = a.Field<long>("user_id"),
@@ -23,7 +24,7 @@ namespace Template.Additional
 
             var deletedUsers = 0;
 
-            await botClient.SendTextMessageAsync(update.Message.Chat.Id, "Запущена очистка. \n\n*По готовности будет уведомление*.", parseMode: ParseMode.Markdown);
+            await botClient.EditMessageTextAsync(update.Message.Chat.Id, update.Message.MessageId, "Запущена очистка. \n\n*По готовности будет уведомление*.", parseMode: ParseMode.Markdown);
 
             _ = Task.Run(async () =>
             {

@@ -1,6 +1,4 @@
-﻿using Telegram.Bot.Types;
-
-namespace TelegramBotFramework
+﻿namespace TelegramBotFramework
 {
     internal class TaskInfo
     {

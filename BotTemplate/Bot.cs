@@ -1,9 +1,9 @@
-﻿using Template.Additional;
-using Template.Entities;
-using Template.Monitoring;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramBotFramework;
+using Template.Additional;
+using Template.Entities;
+using Template.Monitoring;
 
 namespace Template
 {
@@ -93,7 +93,7 @@ namespace Template
 
             switch (update.Message.Text)
             {
-                case "/start": await Base.Start(update); return;
+                case "/start": await Base.AdminPanel(update); return;
             }
         }
 
@@ -101,6 +101,9 @@ namespace Template
         /// <summary> Update callback handler </summary>
         public async Task HandleCallbackQuery(UpdateInfo update)
         {
+            await Base.AdminPanel(update);
+
+            await Logger.LogMessage("got callback");
             await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
         }
     }

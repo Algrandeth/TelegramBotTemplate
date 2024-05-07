@@ -1,10 +1,10 @@
-﻿using Template.Additional;
-using System.Data;
+﻿using System.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotFramework;
+using Template.Additional;
 
 namespace Template.Entities
 {
@@ -28,7 +28,11 @@ namespace Template.Entities
             var nextButton = await bot.NewButtonClick(update);
             if (nextButton == null) return;
             if (nextButton.Data == "Назад") await AdminPanel(update, nextButton);
-            if (nextButton.Data == "Удалить мертвых юзеров") await Tools.DeleteDeadUsers(bot.BotClient, update);
+            if (nextButton.Data == "Удалить мертвых юзеров")
+            {
+                await Tools.DeleteDeadUsers(bot.BotClient, update);
+                await AdminPanel(update);
+            }
         }
     }
 }

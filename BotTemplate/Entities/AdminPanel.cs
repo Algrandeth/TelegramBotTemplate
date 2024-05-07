@@ -20,7 +20,7 @@ namespace Template.Entities
                 new InlineKeyboardButton[] { "Выгрузка пользователей" }
             };
 
-            var replyMsg = $"Админ-панель<a href=\"https://images-platform.99static.com/7Ry0xejgUqcaqGdmbmWw5V07aAA=/220x2255:1825x3860/500x500/top/smart/99designs-contests-attachments/120/120963/attachment_120963956\">.</a>";
+            var replyMsg = $"Админ-панель<a href=\"https://i.pinimg.com/564x/c9/4d/ab/c94dab0f12a851df1edd4efb15f0b8c9.jpg\">.</a>";
             if (callback == null) await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, replyMsg, parseMode: ParseMode.Html, replyMarkup: new InlineKeyboardMarkup(startInlineKeyboard));
             else
             {

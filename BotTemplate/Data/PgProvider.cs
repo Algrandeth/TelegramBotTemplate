@@ -1,6 +1,6 @@
-﻿using Template.Monitoring;
-using Npgsql;
+﻿using Npgsql;
 using System.Data;
+using Template.Monitoring;
 
 namespace Template
 {

@@ -31,12 +31,12 @@
 
 
 
-        public static async Task LogError(string text)
+        public static async Task LogError(Exception ex)
         {
             try
             {
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
-                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} |  ERROR   |  " + text;
+                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} |  ERROR   |  " + ex.Message + "StackTrace: " + ex.StackTrace;
 
                 Console.WriteLine(logText);
                 Console.ResetColor();
@@ -47,12 +47,44 @@
         }
 
 
-        public static async Task LogCritical(string text)
+        public static async Task LogError(string ex)
+        {
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} |  ERROR   |  " + ex;
+
+                Console.WriteLine(logText);
+                Console.ResetColor();
+                await WriteLog(logText);
+            }
+            catch
+            { }
+        }
+
+
+        public static async Task LogCritical(Exception ex)
         {
             try
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} | CRITICAL |  " + text;
+                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} | CRITICAL |  " + ex.Message + "StackTrace: " + ex.StackTrace;
+
+                Console.WriteLine(logText);
+                Console.ResetColor();
+                await WriteLog(logText);
+            }
+            catch
+            { }
+        }
+
+
+        public static async Task LogCritical(string ex)
+        {
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                var logText = $"| {DateTime.UtcNow.AddHours(3):HH:mm:ss yyyy-MM-dd} | CRITICAL |  " + ex;
 
                 Console.WriteLine(logText);
                 Console.ResetColor();

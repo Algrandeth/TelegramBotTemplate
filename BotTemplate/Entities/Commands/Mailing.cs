@@ -1,19 +1,18 @@
-﻿using Template.Monitoring;
-using System.Data;
+﻿using System.Data;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotFramework;
+using Template.Monitoring;
 
 namespace Template.Entities
 {
     public partial class BaseEntity
     {
         /// <summary> Рассылка по выбранным тематикам </summary>
-        private async Task Mailing(UpdateInfo update, CallbackQuery? callback = null)
+        public async Task Mailing(UpdateInfo update, CallbackQuery? callback = null)
         {
             var userMessagePhoto = default(string?);
             var userMessageText = default(string?);
@@ -29,10 +28,13 @@ namespace Template.Entities
                     new InlineKeyboardButton[] { "Назад" }
                 }));
             else
-                await bot.BotClient.EditMessageTextAsync(update.Message.Chat.Id, callback.Message.MessageId, newOrRetryMsg, parseMode: ParseMode.Html, disableWebPagePreview: true, replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>()
+            {
+                await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, callback.Message.MessageId);
+                await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, newOrRetryMsg, parseMode: ParseMode.Html, disableWebPagePreview: true, replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>()
                 {
                     new InlineKeyboardButton[] { "Назад" }
                 }));
+            }
 
             var continueButtonPressed = false;
             do
@@ -41,7 +43,8 @@ namespace Template.Entities
                 if (nextMessage == null) return;
                 if (nextMessage.Text == "Назад")
                 {
-                    await AdminPanel(update, callback);
+                    await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
+                    await AdminPanel(update);
                     return;
                 }
 
@@ -67,6 +70,7 @@ namespace Template.Entities
 
                     if (nextCallbackQuery.Data == "Продолжить")
                     {
+                        await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, nextCallbackQuery.Message.MessageId);
                         await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, "<b>Прикрепить кнопку?</b>", parseMode: ParseMode.Html, replyMarkup: new InlineKeyboardMarkup(new[]
                         {
                             new InlineKeyboardButton[] { "Да", "Нет" }
@@ -83,7 +87,7 @@ namespace Template.Entities
                                            $"текст - ссылка\n\n" +
                                            $"*Например:* \n\nУчаствовать - https://t.me/test";
 
-
+                                await bot.BotClient.DeleteMessageAsync(nextCallbackQuery.From.Id, nextCallbackQuery.Message.MessageId);
                                 await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, text, parseMode: ParseMode.Markdown);
 
                                 var newTextMessage = await bot.NewTextMessage(update);
@@ -107,12 +111,14 @@ namespace Template.Entities
                                     continue;
                                 else if (nextCallbackQuery.Data == "Продолжить")
                                 {
+
                                     userMessageInlineKeyboard = userKeyboardButton;
                                     continueButtonPressed = true;
                                 }
                             }
                         }
 
+                        await bot.BotClient.DeleteMessageAsync(nextCallbackQuery.From.Id, nextCallbackQuery.Message.MessageId);
 
                         continueButtonPressed = true;
                     }
@@ -121,10 +127,10 @@ namespace Template.Entities
                     {
                         continueButtonPressed = false;
 
-                        await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, newOrRetryMsg, parseMode: ParseMode.Html, disableWebPagePreview: true);
+                        await Mailing(update, nextCallbackQuery);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     var replyMsg = $@"Возникло необработанное исключение. Попробуйте другой пост.";
                     await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, replyMsg);
@@ -155,10 +161,9 @@ namespace Template.Entities
                     UserID = a.Field<long>("user_id")
                 }).ToList();
 
-                var inlineKeyboard = new InlineKeyboardMarkup(new[] { new InlineKeyboardButton[] { "Админ-панель" } });
 
+                await bot.BotClient.EditMessageTextAsync(update.Message.Chat.Id, nextCallback.Message.MessageId, $"*Рассылка запущена.* Получателей: *{usersToSend.Count}* \n\n*По готовности вам придет уведомление.*", parseMode: ParseMode.Markdown);
 
-                await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, $"*Рассылка запущена.* Получателей: *{usersToSend.Count}* \n\n*По готовности вам придет уведомление.*", parseMode: ParseMode.Markdown, replyMarkup: inlineKeyboard);
                 _ = Task.Run(async () =>
                 {
                     var usersGetMessageCount = 0;
@@ -173,7 +178,7 @@ namespace Template.Entities
                         }
                         catch (Exception ex)
                         {
-                            Thread.Sleep(10000);
+                            Thread.Sleep(3000);
 
                             await Logger.LogError("Ошибка при рассылке: " + ex.Message);
                             continue;
