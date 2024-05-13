@@ -9,7 +9,7 @@ using Template.Monitoring;
 
 namespace Template.Entities
 {
-    public partial class BaseEntity
+    public partial class CommandHandler
     {
         /// <summary> Рассылка по выбранным тематикам </summary>
         public async Task Mailing(UpdateInfo update, CallbackQuery? callback = null)
@@ -25,14 +25,14 @@ namespace Template.Entities
             if (callback == null)
                 await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, newOrRetryMsg, parseMode: ParseMode.Html, disableWebPagePreview: true, replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>()
                 {
-                    new InlineKeyboardButton[] { "Назад" }
+                    //new InlineKeyboardButton[] { "Назад" }
                 }));
             else
             {
                 await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, callback.Message.MessageId);
                 await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, newOrRetryMsg, parseMode: ParseMode.Html, disableWebPagePreview: true, replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>()
                 {
-                    new InlineKeyboardButton[] { "Назад" }
+                    //new InlineKeyboardButton[] { "Назад" }
                 }));
             }
 
@@ -41,12 +41,12 @@ namespace Template.Entities
             {
                 var nextMessage = await bot.NewFullMessage(update);
                 if (nextMessage == null) return;
-                if (nextMessage.Text == "Назад")
-                {
-                    await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
-                    await AdminPanel(update);
-                    return;
-                }
+                //if (nextMessage.Text == "Назад")
+                //{
+                //    await bot.BotClient.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
+                //    await AdminPanel(update);
+                //    return;
+                //}
 
                 try
                 {
@@ -188,7 +188,10 @@ namespace Template.Entities
                     await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, $"*Рассылка успешно завершена*. \n\nПользователей получило сообщение: *{usersGetMessageCount}*.", parseMode: ParseMode.Markdown);
                 });
             }
-            else if (nextCallback.Data == "Отменить") await AdminPanel(update, nextCallback);
+            else if (nextCallback.Data == "Отменить")
+            {
+                await bot.BotClient.SendTextMessageAsync(update.Message.Chat.Id, "<b>Рассылка отменена.</b>", parseMode: ParseMode.Html);
+            }//await AdminPanel(update, nextCallback);
         }
     }
 }

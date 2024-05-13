@@ -6,7 +6,7 @@ using TelegramBotFramework;
 
 namespace Template.Entities
 {
-    public partial class BaseEntity
+    public partial class CommandHandler
     {
         public bool AcceptJoinRequests = true;
 
@@ -36,9 +36,9 @@ namespace Template.Entities
             if (nextCallbackQuery == null) return;
             switch (nextCallbackQuery.Data)
             {
-                case "Рассылка": await Mailing(update, nextCallbackQuery); return;
-                case "Статистика": await UserStatistics(update, nextCallbackQuery); return;
-                case "Выгрузка пользователей": await DownloadUsers(update, nextCallbackQuery); return;
+                case "Рассылка": await Mailing(update/*, nextCallbackQuery*/); return;
+                case "Статистика": await UserStatistics(update/*, nextCallbackQuery*/); return;
+                case "Выгрузка пользователей": await DownloadUsers(update/*, nextCallbackQuery*/); return;
             }
         }
     }

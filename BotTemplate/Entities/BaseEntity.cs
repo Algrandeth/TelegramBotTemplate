@@ -4,12 +4,12 @@ using TelegramBotFramework;
 
 namespace Template.Entities
 {
-    public partial class BaseEntity
+    public partial class CommandHandler
     {
         public static PgProvider pg = new(Bot.DatabaseConnectionString);
         public static string sqlQuery = "";
 
-        public BaseEntity(Bot nb) => bot = nb;
+        public CommandHandler(Bot nb) => bot = nb;
 
         public readonly Bot bot;
 

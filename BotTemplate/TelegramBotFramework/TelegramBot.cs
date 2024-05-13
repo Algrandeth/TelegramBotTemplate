@@ -40,18 +40,12 @@ namespace TelegramBotFramework
                 BotClient.StartReceiving(UpdateHandler, ErrorHandler, cancellationToken: cts.Token, receiverOptions: new Telegram.Bot.Polling.ReceiverOptions() { ThrowPendingUpdates = true });
             });
 
-            await BotClient.SetMyCommandsAsync(
-                        new List<BotCommand>()
-                            { new BotCommand() { Command = "/start", Description = "Перезапуск бота" } },
-                        BotCommandScope.AllPrivateChats());
+            await BotClient.SetMyCommandsAsync(CommandsStore.UserCommandsList, BotCommandScope.AllPrivateChats());
 
             foreach (var admin in Config.Admins)
                 try
                 {
-                    await BotClient.SetMyCommandsAsync(
-                        new List<BotCommand>()
-                            { new BotCommand() { Command = "/start", Description = "Админ-панель бота" } },
-                        BotCommandScope.Chat(admin));
+                    await BotClient.SetMyCommandsAsync(CommandsStore.AdminCommandsList, BotCommandScope.Chat(admin));
                 }
                 catch (Exception) { }
 
@@ -147,39 +141,6 @@ namespace TelegramBotFramework
         }
 
 
-
-        // OG
-        //private async Task HandleUpdate(Update update, UpdateKind updateKind, Message? message = null, Chat? chat = null)
-        //{
-        //    try
-        //    {
-        //        TaskInfo taskInfo;
-        //        chat ??= message?.Chat;
-        //        long chatId = chat?.Id ?? 0;
-        //        lock (_tasks)
-        //            if (!_tasks.TryGetValue(chatId, out taskInfo!))
-        //                _tasks[chatId] = taskInfo = new TaskInfo();
-
-        //        var updateInfo = new UpdateInfo(taskInfo) { UpdateKind = updateKind, Update = update, Message = message };
-        //        if (update.Type is UpdateType.CallbackQuery)
-        //            updateInfo.CallbackQuery = update.CallbackQuery;
-
-        //        lock (taskInfo)
-        //            if (taskInfo.Task != null)
-        //            {
-        //                taskInfo.Updates.Enqueue(updateInfo);
-        //                taskInfo.Semaphore.Release();
-        //                return;
-        //            }
-        //        await RunTask(taskInfo, updateInfo, chat!);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        await Logger.LogCritical(ex.Message);
-        //    }
-        //}
-
-
         private async Task RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat)
         {
             Func<Task> taskStarter;
@@ -214,28 +175,6 @@ namespace TelegramBotFramework
         }
 
 
-        // OG
-        //private async Task RunTask(TaskInfo taskInfo, UpdateInfo updateInfo, Chat chat)
-        //{
-        //    Func<Task> taskStarter;
-
-        //    if (chat?.Type == ChatType.Private) taskStarter = () => OnPrivateChat(chat, updateInfo.Message?.From!, updateInfo);
-        //    else if (chat?.Type == ChatType.Channel) taskStarter = () => OnChannel(chat, updateInfo.Message?.From!, updateInfo);
-        //    else return;
-
-        //    taskInfo.Task = Task.Run(taskStarter).ContinueWith(async t =>
-        //    {
-        //        lock (taskInfo)
-        //            if (taskInfo.Semaphore.CurrentCount == 0)
-        //            {
-        //                taskInfo.Task = null!;
-        //                return;
-        //            }
-        //        var newUpdate = await ((IGetNext)updateInfo).NextUpdate(cts.Token);
-        //        await RunTask(taskInfo, newUpdate, chat);
-        //    });
-        //}
-
 
         /// <summary> Detects chat update kind </summary>
         public async Task<UpdateKind> NextEvent(UpdateInfo update, CancellationToken ct = default)
@@ -259,7 +198,7 @@ namespace TelegramBotFramework
                 switch (await NextEvent(update, ct))
                 {
                     case UpdateKind.NewMessage:
-                        if (DataStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && DataStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
+                        if (CommandsStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && CommandsStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
                         {
                             await HandleMessage(BotClient, update);
                             return null;
@@ -324,7 +263,7 @@ namespace TelegramBotFramework
                 if (update.CallbackData == "Назад") return update.CallbackData;
             }
 
-            if (DataStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && DataStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
+            if (CommandsStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && CommandsStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
             {
                 await HandleMessage(BotClient, update);
                 return null;
@@ -349,7 +288,7 @@ namespace TelegramBotFramework
                 if (update.CallbackData == "Назад") return update.CallbackData;
             }
 
-            if (DataStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && DataStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
+            if (CommandsStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && CommandsStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
             {
                 await HandleMessage(BotClient, update);
                 return null;
@@ -370,7 +309,7 @@ namespace TelegramBotFramework
             }
 
 
-            if (DataStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && DataStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
+            if (CommandsStore.CommandList.Any(a => a == update.Message.Text) || (update.Message.Text != null && CommandsStore.MetaCommandList.Any(a => update.Message.Text.Contains(a))))
             {
                 await HandleMessage(BotClient, update);
                 return null;

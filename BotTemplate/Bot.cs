@@ -2,6 +2,7 @@
 using Telegram.Bot.Types;
 using TelegramBotFramework;
 using Template.Additional;
+using Template.Data;
 using Template.Entities;
 using Template.Monitoring;
 
@@ -10,18 +11,20 @@ namespace Template
     public class Bot : TelegramBot
     {
         public static string DatabaseConnectionString;
-        private static BaseEntity Base;
+        private static CommandHandler CommandsHandler;
 
         public Bot(string botToken) : base(botToken) { }
 
         private static async Task Main()
         {
             Config.Config.Init();
+            CommandsStore.InitCommandList();
+
             DatabaseConnectionString = Config.Config.PostgreConnectionString;
 
             Bot bot = new(Config.Config.BotToken);
 
-            Base = new(bot);
+            CommandsHandler = new(bot);
             await bot.RunAsync();
         }
 
@@ -88,12 +91,14 @@ namespace Template
             if (Config.Config.Admins.Any(a => a == update.Message.Chat.Id))
                 switch (update.Message.Text)
                 {
-                    case "/start": await Base.AdminPanel(update); return;
+                    case "/stats": await CommandsHandler.UserStatistics(update); return;
+                    case "/download_users": await CommandsHandler.DownloadUsers(update); return;
+                    case "/mailing": await CommandsHandler.Mailing(update); return;
                 }
 
             switch (update.Message.Text)
             {
-                case "/start": await Base.AdminPanel(update); return;
+                case "/start": await CommandsHandler.Start(update); return;
             }
         }
 
@@ -101,8 +106,6 @@ namespace Template
         /// <summary> Update callback handler </summary>
         public async Task HandleCallbackQuery(UpdateInfo update)
         {
-            await Base.AdminPanel(update);
-
             await Logger.LogMessage("got callback");
             await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
         }
