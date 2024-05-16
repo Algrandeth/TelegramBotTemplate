@@ -49,15 +49,6 @@
 
 
         /// <summary>
-        /// Получить тип <see cref="SqlType"> для объекта 
-        /// </summary>
-        /// <param name="value">Объект тип данных которого нужно определить</param>
-        /// <returns></returns>
-        public static SqlType GetSqlType(object value) =>
-            GetSqlType(value.GetType());
-
-
-        /// <summary>
         /// Получить тип <see cref="SqlType"> для указанного типа <see cref="Type">
         /// </summary>
         /// <param name="type"></param>
