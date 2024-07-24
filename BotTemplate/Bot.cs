@@ -29,7 +29,7 @@ namespace Template
         }
 
 
-        /// <summary> Private chat update handler </summary>
+        /// <summary> Private chat update handler. </summary>
         public override async Task OnPrivateChat(Chat chat, User user, UpdateInfo update)
         {
             try
