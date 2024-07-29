@@ -9,9 +9,9 @@
 
         public static void Init()
         {
-            BotToken = Environment.GetEnvironmentVariable("BOT_TOKEN");
-            Admins = Environment.GetEnvironmentVariable("ADMIN_LIST") != null ? Environment.GetEnvironmentVariable("ADMIN_LIST")!.Split(',').Select(a => Convert.ToInt64(a)).ToList() : new List<long>() { 638232468 };
-            PostgreConnectionString = Environment.GetEnvironmentVariable("POSTGRE_STRING");
+            BotToken = Environment.GetEnvironmentVariable("TOKEN");
+            Admins = Environment.GetEnvironmentVariable("ADMINS") != null ? Environment.GetEnvironmentVariable("ADMIN_LIST")!.Split(',').Select(a => Convert.ToInt64(a)).ToList() : new List<long>() { 638232468 };
+            PostgreConnectionString = Environment.GetEnvironmentVariable("POSTGRES");
         }
     }
 }
