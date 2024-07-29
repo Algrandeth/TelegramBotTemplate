@@ -49,8 +49,11 @@ namespace TelegramBotFramework
                 }
                 catch (Exception) { }
 
-            await Task.Delay(TimeSpan.FromHours(3));
-            Environment.Exit(0);
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromHours(3));
+                _tasks.Clear();
+            }
         }
 
 
@@ -217,7 +220,7 @@ namespace TelegramBotFramework
                         { NewChatMember: { Status: ChatMemberStatus.Left or ChatMemberStatus.Kicked } }:
                         {
                             return null;
-                        }// abort the calling method
+                        }
                 }
             }
         }
