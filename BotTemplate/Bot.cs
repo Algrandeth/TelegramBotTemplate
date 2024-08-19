@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Globalization;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramBotFramework;
 using Template.Additional;
@@ -21,6 +22,9 @@ namespace Template
             CommandsStore.InitCommandList();
 
             DatabaseConnectionString = Config.Config.PostgreConnectionString;
+            CultureInfo culture = new CultureInfo("ru-RU");
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
 
             Bot bot = new(Config.Config.BotToken);
 

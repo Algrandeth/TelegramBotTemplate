@@ -51,7 +51,7 @@ namespace TelegramBotFramework
 
             while (true)
             {
-                await Task.Delay(TimeSpan.FromHours(3));
+                await Task.Delay(TimeSpan.FromHours(1.5));
                 _tasks.Clear();
             }
         }
