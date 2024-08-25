@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotFramework;
 using Template.Monitoring;
 
@@ -45,6 +46,22 @@ namespace Template.Additional
 
                 await botClient.SendTextMessageAsync(update.Message.Chat.Id, $"*Очистка юзеров успешно завершена* \n\nУдалено юзеров: *{deletedUsers}*", parseMode: ParseMode.Markdown);
             });
+        }
+
+
+        public static List<InlineKeyboardButton[]> ApplyPagination<T>(this List<InlineKeyboardButton[]> keyboard, int page, List<T> list)
+        {
+            if (page > 1 && list.Count < 10)
+                keyboard.Add(new InlineKeyboardButton[] { new("👈🏻") { CallbackData = $"Back" } });
+            else if (list.Count == 10 && page > 1)
+                keyboard.Add(new InlineKeyboardButton[]
+                {
+            new("👈🏻") { CallbackData = $"Back" }, new("👉🏻") { CallbackData = $"Next" }
+                });
+            else if (list.Count == 10 && page == 1)
+                keyboard.Add(new InlineKeyboardButton[] { new("👉🏻") { CallbackData = $"Next" } });
+
+            return keyboard;
         }
 
 
